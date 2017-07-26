@@ -906,11 +906,19 @@ commands(State, StreamID, [stop|Tail]) ->
 commands(State, StreamID, [{push, _, _, _, _, _, _, _}|Tail]) ->
 	commands(State, StreamID, Tail).
 
+deduplicate_headers(HeaderProplist) ->
+    lists:foldl(
+      fun({K, V}, Props) -> case lists:keymember(K, 1, Props) of
+                                false -> Props ++ [{K,V}]; 
+                                true  -> Props 
+                            end 
+      end, [], HeaderProplist).
+
 %% The set-cookie header is special; we can only send one cookie per header.
 headers_to_list(Headers0=#{<<"set-cookie">> := SetCookies}) ->
 	Headers1 = maps:to_list(maps:remove(<<"set-cookie">>, Headers0)),
     Headers2 = [{cowboy_bstr:capitalize_token(Key), Value} || {Key, Value} <- Headers1],
-	Headers2 ++ [{<<"set-cookie">>, Value} || Value <- SetCookies];
+	Headers2 ++ [{<<"Set-Cookie">>, Value} || Value <- SetCookies];
 headers_to_list(Headers0) ->
 	Headers = maps:to_list(Headers0),
     [{cowboy_bstr:capitalize_token(Key), Value} || {Key, Value} <- Headers].
