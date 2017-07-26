@@ -918,10 +918,12 @@ deduplicate_headers(HeaderProplist) ->
 headers_to_list(Headers0=#{<<"set-cookie">> := SetCookies}) ->
 	Headers1 = maps:to_list(maps:remove(<<"set-cookie">>, Headers0)),
     Headers2 = [{cowboy_bstr:capitalize_token(Key), Value} || {Key, Value} <- Headers1],
-	Headers2 ++ [{<<"Set-Cookie">>, Value} || Value <- SetCookies];
+	Headers3 = Headers2 ++ [{<<"Set-Cookie">>, Value} || Value <- SetCookies],
+    deduplicate_headers(Headers3);
 headers_to_list(Headers0) ->
-	Headers = maps:to_list(Headers0),
-    [{cowboy_bstr:capitalize_token(Key), Value} || {Key, Value} <- Headers].
+	Headers1 = maps:to_list(Headers0),
+    Headers2 = [{cowboy_bstr:capitalize_token(Key), Value} || {Key, Value} <- Headers1],
+    deduplicate_headers(Headers2).
 
 flush() ->
 	receive _ -> flush() after 0 -> ok end.
